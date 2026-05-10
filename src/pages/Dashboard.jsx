@@ -381,6 +381,13 @@ export default function Dashboard() {
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
               </button>
               <span className="text-sm text-gray-400 capitalize whitespace-nowrap">{dateStr}</span>
+              <Link
+                to="/nouvelle-invitation"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold whitespace-nowrap transition-opacity hover:opacity-90"
+                style={{ backgroundColor: '#2D7DD2' }}
+              >
+                + Nouvelle Invitation
+              </Link>
             </div>
           </header>
 
@@ -433,6 +440,16 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* FAB mobile */}
+      <Link
+        to="/nouvelle-invitation"
+        className="fixed bottom-20 right-4 md:hidden w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl font-light shadow-lg z-40 transition-opacity hover:opacity-90"
+        style={{ backgroundColor: '#2D7DD2', boxShadow: '0 4px 16px rgba(45,125,210,0.4)' }}
+        aria-label="Nouvelle Invitation"
+      >
+        +
+      </Link>
 
       {/* Bottom nav mobile */}
       <BottomNav navigate={navigate} />
