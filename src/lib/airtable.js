@@ -1,5 +1,8 @@
 const BASE_URL = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}`
 
+console.log('[airtable] token:', import.meta.env.VITE_AIRTABLE_TOKEN)
+console.log('[airtable] base:', import.meta.env.VITE_AIRTABLE_BASE_ID)
+
 const headers = {
   Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_TOKEN}`,
   'Content-Type': 'application/json',
@@ -14,12 +17,18 @@ export async function fetchRecords(table, params = {}) {
 }
 
 export async function createRecord(table, fields) {
+  const body = { fields }
+  console.log('[airtable] createRecord →', JSON.stringify(body, null, 2))
   const res = await fetch(`${BASE_URL}/${encodeURIComponent(table)}`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ fields }),
+    body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(`Airtable error ${res.status}`)
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => null)
+    console.log('[airtable] erreur detail:', JSON.stringify(errBody, null, 2))
+    throw new Error(`Airtable error ${res.status}`)
+  }
   return res.json()
 }
 

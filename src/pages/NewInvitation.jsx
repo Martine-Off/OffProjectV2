@@ -104,9 +104,10 @@ export default function NewInvitation() {
       const today = new Date().toISOString().split('T')[0]
       const record = await createRecord(TABLE_ID, {
         Statut: 'Soumis',
-        'Nb places gratuites': placesGratuites,
-        'Nb places payantes': placesPayantes,
+        "Nombre d'invitations": placesGratuites,
+        'Nb payantes': placesPayantes,
         'Date soumission': today,
+        Professionnel: ['rec3y3N9Bo2NJmgUw'],
       })
       navigate('/confirmation', {
         state: {
