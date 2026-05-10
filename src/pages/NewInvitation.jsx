@@ -90,9 +90,19 @@ export default function NewInvitation() {
 
   const [pros, setPros] = useState([])
   const [prosLoading, setProsLoading] = useState(true)
+  const [modeNouveauPro, setModeNouveauPro] = useState(false)
+
+  // Mode pro existant
   const [selectedPro, setSelectedPro] = useState(null)
+
+  // Mode nouveau pro
+  const [nouveauNom, setNouveauNom] = useState('')
+  const [nouveauPrenom, setNouveauPrenom] = useState('')
+
+  // Champs communs (autofillés en mode existant)
   const [structure, setStructure] = useState('')
   const [email, setEmail] = useState('')
+
   const [placesGratuites, setPlacesGratuites] = useState(2)
   const [placesPayantes, setPlacesPayantes] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -114,25 +124,58 @@ export default function NewInvitation() {
     setStructure(rec?.fields['Organisation'] ?? '')
   }
 
+  function switchToNouveauPro() {
+    setModeNouveauPro(true)
+    setSelectedPro(null)
+    setEmail('')
+    setStructure('')
+  }
+
+  function switchToProExistant() {
+    setModeNouveauPro(false)
+    setNouveauNom('')
+    setNouveauPrenom('')
+    setEmail('')
+    setStructure('')
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
     setError(null)
     try {
       const today = new Date().toISOString().split('T')[0]
+
+      let proId
+      let proLabel
+
+      if (modeNouveauPro) {
+        const newPro = await createRecord(TABLE_PROS, {
+          Nom: nouveauNom,
+          'Prénom': nouveauPrenom,
+          Email: email,
+          Organisation: structure,
+        })
+        proId = newPro.id
+        proLabel = `${nouveauPrenom} ${nouveauNom}`
+      } else {
+        proId = selectedPro.id
+        proLabel = `${selectedPro.fields['Prénom']} ${selectedPro.fields['Nom']}`
+      }
+
       const record = await createRecord(TABLE_RESERVATIONS, {
         Statut: 'Soumis',
         "Nombre d'invitations": placesGratuites,
         'Nb payantes': placesPayantes,
         'Date soumission': today,
-        Professionnel: [selectedPro.id],
+        Professionnel: [proId],
         Spectacle: ['recMvEOCHXOapd0qW'],
       })
       navigate('/confirmation', {
         state: {
           record,
           spectacle: SPECTACLE,
-          professionnel,
+          professionnel: proLabel,
           structure,
           email,
           placesGratuites,
@@ -141,6 +184,7 @@ export default function NewInvitation() {
         },
       })
     } catch (err) {
+      console.error('[submit] erreur complète:', err, err?.message, err?.stack)
       setError('Erreur lors de la soumission. Veuillez réessayer.')
     } finally {
       setLoading(false)
@@ -163,41 +207,81 @@ export default function NewInvitation() {
           Détails de l'invité
         </h2>
 
-        {/* Professionnel */}
-        <div className="mb-3">
-          <label className="block text-xs font-medium mb-1" style={{ color: '#1A1A2E' }}>
-            Nom du Professionnel <Badge>Requis</Badge>
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
-              </svg>
-            </span>
-            <select
-              value={selectedPro?.id ?? ''}
-              onChange={e => handleSelectPro(e.target.value)}
-              className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 appearance-none"
-              style={{ color: selectedPro ? '#1A1A2E' : '#9CA3AF' }}
-              required
-              disabled={prosLoading}
-            >
-              <option value="" disabled>
-                {prosLoading ? 'Chargement…' : 'Nom, Prénom'}
-              </option>
-              {pros.map(r => (
-                <option key={r.id} value={r.id}>
-                  {r.fields['Prénom']} {r.fields['Nom']}
+        {/* Professionnel — mode existant */}
+        {!modeNouveauPro && (
+          <div className="mb-1">
+            <label className="block text-xs font-medium mb-1" style={{ color: '#1A1A2E' }}>
+              Nom du Professionnel <Badge>Requis</Badge>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
+                </svg>
+              </span>
+              <select
+                value={selectedPro?.id ?? ''}
+                onChange={e => handleSelectPro(e.target.value)}
+                className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 appearance-none"
+                style={{ color: selectedPro ? '#1A1A2E' : '#9CA3AF' }}
+                required
+                disabled={prosLoading}
+              >
+                <option value="" disabled>
+                  {prosLoading ? 'Chargement…' : 'Nom, Prénom'}
                 </option>
-              ))}
-            </select>
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </span>
+                {pros.map(r => (
+                  <option key={r.id} value={r.id}>
+                    {r.fields['Prénom']} {r.fields['Nom']}
+                  </option>
+                ))}
+              </select>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
+            </div>
+            <button type="button" onClick={switchToNouveauPro}
+              className="mt-2 mb-3 text-xs font-medium"
+              style={{ color: '#2D7DD2' }}>
+              + Ajouter un nouveau professionnel
+            </button>
           </div>
-        </div>
+        )}
+
+        {/* Professionnel — mode nouveau */}
+        {modeNouveauPro && (
+          <div className="mb-1 flex flex-col gap-3">
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-xs font-medium mb-1" style={{ color: '#1A1A2E' }}>
+                  Prénom <Badge>Requis</Badge>
+                </label>
+                <input type="text" value={nouveauPrenom}
+                  onChange={e => setNouveauPrenom(e.target.value)}
+                  placeholder="Prénom"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 placeholder-gray-400"
+                  style={{ color: '#1A1A2E' }} required />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs font-medium mb-1" style={{ color: '#1A1A2E' }}>
+                  Nom <Badge>Requis</Badge>
+                </label>
+                <input type="text" value={nouveauNom}
+                  onChange={e => setNouveauNom(e.target.value)}
+                  placeholder="Nom"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 placeholder-gray-400"
+                  style={{ color: '#1A1A2E' }} required />
+              </div>
+            </div>
+            <button type="button" onClick={switchToProExistant}
+              className="text-xs font-medium text-left"
+              style={{ color: '#2D7DD2' }}>
+              ← Choisir un pro existant
+            </button>
+          </div>
+        )}
 
         {/* Structure */}
         <div className="mb-3">
@@ -290,11 +374,15 @@ export default function NewInvitation() {
         className="text-sm text-center font-medium transition-colors"
         style={{ color: '#2D7DD2' }}
         onClick={() => {
+          setModeNouveauPro(false)
           setSelectedPro(null)
+          setNouveauNom('')
+          setNouveauPrenom('')
           setStructure('')
           setEmail('')
           setPlacesGratuites(2)
           setPlacesPayantes(1)
+          setError(null)
         }}
       >
         Ajouter un autre invité +
