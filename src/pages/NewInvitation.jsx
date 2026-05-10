@@ -48,10 +48,10 @@ function Badge({ children }) {
 function BottomNav() {
   const navigate = useNavigate()
   const items = [
-    { label: 'Accueil', icon: <HomeIcon />, path: '/' },
+    { label: 'Accueil',   icon: <HomeIcon />,      path: '/dashboard' },
     { label: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { label: 'Scanner', icon: <ScannerIcon />, path: '/scanner' },
-    { label: 'Profil', icon: <ProfilIcon />, path: '/profil' },
+    { label: 'Scanner',   icon: <ScannerIcon />,   path: '/scanner' },
+    { label: 'Profil',    icon: <ProfilIcon />,    path: '/profil' },
   ]
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex md:hidden z-50"

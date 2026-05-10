@@ -154,10 +154,10 @@ function QuotaCard() {
 
 function BottomNav({ navigate }) {
   const items = [
-    { label: 'Accueil',    icon: <HomeIcon />,       path: '/' },
-    { label: 'Dashboard',  icon: <DashboardNavIcon />, path: '/dashboard', active: true },
-    { label: 'Scanner',    icon: <ScannerNavIcon />, path: '/scanner' },
-    { label: 'Profil',     icon: <ProfilNavIcon />,  path: '/profil' },
+    { label: 'Accueil',   icon: <HomeIcon />,         path: '/dashboard' },
+    { label: 'Dashboard', icon: <DashboardNavIcon />, path: '/dashboard', active: true },
+    { label: 'Scanner',   icon: <ScannerNavIcon />,   path: '/scanner' },
+    { label: 'Profil',    icon: <ProfilNavIcon />,    path: '/profil' },
   ]
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex md:hidden z-50"
