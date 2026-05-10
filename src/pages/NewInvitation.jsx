@@ -108,6 +108,7 @@ export default function NewInvitation() {
         'Nb payantes': placesPayantes,
         'Date soumission': today,
         Professionnel: ['rec3y3N9Bo2NJmgUw'],
+        Spectacle: ['recMvEOCHXOapd0qW'],
       })
       navigate('/confirmation', {
         state: {
