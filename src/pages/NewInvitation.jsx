@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createRecord } from '../lib/airtable'
+import { createRecord, fetchRecords } from '../lib/airtable'
+
+const TABLE_PROS = 'tblKoWqurPMicaI9A'
 
 const SPECTACLE = {
   nom: 'Ballet : Le Lac des Cygnes',
@@ -8,7 +10,7 @@ const SPECTACLE = {
   salle: 'Salle D',
 }
 
-const TABLE_ID = 'tbl82vEhte5d2ziZW'
+const TABLE_RESERVATIONS = 'tbl82vEhte5d2ziZW'
 
 function Stepper({ label, value, onChange }) {
   return (
@@ -86,9 +88,11 @@ function ProfilIcon() {
 export default function NewInvitation() {
   const navigate = useNavigate()
 
-  const [professionnel, setProfessionnel] = useState('')
+  const [pros, setPros] = useState([])
+  const [prosLoading, setProsLoading] = useState(true)
+  const [selectedPro, setSelectedPro] = useState(null)
   const [structure, setStructure] = useState('')
-  const [email, setEmail] = useState('paul.chevalier@email.com')
+  const [email, setEmail] = useState('')
   const [placesGratuites, setPlacesGratuites] = useState(2)
   const [placesPayantes, setPlacesPayantes] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -96,18 +100,32 @@ export default function NewInvitation() {
 
   const total = placesGratuites + placesPayantes
 
+  useEffect(() => {
+    fetchRecords(TABLE_PROS)
+      .then(data => setPros(data.records ?? []))
+      .catch(() => setPros([]))
+      .finally(() => setProsLoading(false))
+  }, [])
+
+  function handleSelectPro(id) {
+    const rec = pros.find(r => r.id === id)
+    setSelectedPro(rec ?? null)
+    setEmail(rec?.fields['Email'] ?? '')
+    setStructure(rec?.fields['Organisation'] ?? '')
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
     setError(null)
     try {
       const today = new Date().toISOString().split('T')[0]
-      const record = await createRecord(TABLE_ID, {
+      const record = await createRecord(TABLE_RESERVATIONS, {
         Statut: 'Soumis',
         "Nombre d'invitations": placesGratuites,
         'Nb payantes': placesPayantes,
         'Date soumission': today,
-        Professionnel: ['rec3y3N9Bo2NJmgUw'],
+        Professionnel: [selectedPro.id],
         Spectacle: ['recMvEOCHXOapd0qW'],
       })
       navigate('/confirmation', {
@@ -157,16 +175,21 @@ export default function NewInvitation() {
               </svg>
             </span>
             <select
-              value={professionnel}
-              onChange={e => setProfessionnel(e.target.value)}
+              value={selectedPro?.id ?? ''}
+              onChange={e => handleSelectPro(e.target.value)}
               className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 appearance-none"
-              style={{ color: professionnel ? '#1A1A2E' : '#9CA3AF', focusRingColor: '#2D7DD2' }}
+              style={{ color: selectedPro ? '#1A1A2E' : '#9CA3AF' }}
               required
+              disabled={prosLoading}
             >
-              <option value="" disabled>Nom, Prénom</option>
-              <option value="Paul Chevalier">Paul Chevalier</option>
-              <option value="Marie Dupont">Marie Dupont</option>
-              <option value="Jean Martin">Jean Martin</option>
+              <option value="" disabled>
+                {prosLoading ? 'Chargement…' : 'Nom, Prénom'}
+              </option>
+              {pros.map(r => (
+                <option key={r.id} value={r.id}>
+                  {r.fields['Prénom']} {r.fields['Nom']}
+                </option>
+              ))}
             </select>
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -267,7 +290,7 @@ export default function NewInvitation() {
         className="text-sm text-center font-medium transition-colors"
         style={{ color: '#2D7DD2' }}
         onClick={() => {
-          setProfessionnel('')
+          setSelectedPro(null)
           setStructure('')
           setEmail('')
           setPlacesGratuites(2)
