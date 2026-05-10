@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 /* ── données statiques ── */
 
@@ -154,7 +154,7 @@ function QuotaCard() {
 
 function BottomNav({ navigate }) {
   const items = [
-    { label: 'Accueil',   icon: <HomeIcon />,         path: '/dashboard' },
+    { label: 'Accueil',   icon: <HomeIcon />,         path: '/nouvelle-invitation' },
     { label: 'Dashboard', icon: <DashboardNavIcon />, path: '/dashboard', active: true },
     { label: 'Scanner',   icon: <ScannerNavIcon />,   path: '/scanner' },
     { label: 'Profil',    icon: <ProfilNavIcon />,    path: '/profil' },
@@ -208,12 +208,12 @@ function Sidebar({ navigate }) {
 
       {/* CTA */}
       <div className="px-4 py-5 border-t border-white/10">
-        <button
-          onClick={() => navigate('/nouvelle-invitation')}
-          className="w-full py-3 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-90"
+        <Link
+          to="/nouvelle-invitation"
+          className="block w-full py-3 rounded-xl text-white text-sm font-semibold text-center transition-opacity hover:opacity-90"
           style={{ backgroundColor: '#2D7DD2' }}>
           + Nouvelle Invitation
-        </button>
+        </Link>
       </div>
     </aside>
   )
