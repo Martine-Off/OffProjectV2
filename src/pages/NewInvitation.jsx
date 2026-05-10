@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createRecord, fetchRecords } from '../lib/airtable'
+import { fetchRecords } from '../lib/airtable'
 
 const TABLE_PROS = 'tblKoWqurPMicaI9A'
 
@@ -144,33 +144,28 @@ export default function NewInvitation() {
     setLoading(true)
     setError(null)
     try {
-      const today = new Date().toISOString().split('T')[0]
+      const proLabel = modeNouveauPro
+        ? `${nouveauPrenom} ${nouveauNom}`
+        : `${selectedPro.fields['Prénom']} ${selectedPro.fields['Nom']}`
 
-      let proId
-      let proLabel
-
-      if (modeNouveauPro) {
-        const newPro = await createRecord(TABLE_PROS, {
-          Nom: nouveauNom,
-          'Prénom': nouveauPrenom,
-          Email: email,
-          Organisation: structure,
-        })
-        proId = newPro.id
-        proLabel = `${nouveauPrenom} ${nouveauNom}`
-      } else {
-        proId = selectedPro.id
-        proLabel = `${selectedPro.fields['Prénom']} ${selectedPro.fields['Nom']}`
-      }
-
-      const record = await createRecord(TABLE_RESERVATIONS, {
-        Statut: 'Soumis',
-        "Nombre d'invitations": placesGratuites,
-        'Nb payantes': placesPayantes,
-        'Date soumission': today,
-        Professionnel: [proId],
-        Spectacle: ['recMvEOCHXOapd0qW'],
+      const res = await fetch('http://localhost:5678/webhook/nouvelle-invitation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          proId: selectedPro?.id ?? null,
+          proNom: modeNouveauPro ? nouveauNom : selectedPro.fields['Nom'],
+          proPrenom: modeNouveauPro ? nouveauPrenom : selectedPro.fields['Prénom'],
+          proEmail: email,
+          proOrganisation: structure,
+          placesGratuites,
+          placesPayantes,
+          spectacleId: 'recMvEOCHXOapd0qW',
+          spectacleInfo: 'Ballet : Le Lac des Cygnes • 18 oct 20h00 • Salle D',
+        }),
       })
+      if (!res.ok) throw new Error(`Webhook error ${res.status}`)
+      const record = await res.json().catch(() => ({}))
+
       navigate('/confirmation', {
         state: {
           record,
